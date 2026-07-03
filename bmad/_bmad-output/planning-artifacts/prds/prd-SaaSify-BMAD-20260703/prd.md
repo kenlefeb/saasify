@@ -1,6 +1,6 @@
 ---
 title: SaaSify Subscription Tracker
-status: draft
+status: final
 created: 2026-07-03
 updated: 2026-07-03
 ---
@@ -28,37 +28,46 @@ SaaSify is a lightweight, single-page dashboard application that gives teams and
 
 * **UJ-1. Viewer inspects the dashboard spend and subscriptions**
   * **Persona + context:** Ken, a Viewer user, wants to review the total subscription spend for the team.
-  * **Entry state:** Authenticated as a Viewer on the SaaSify dashboard page.
+  * **Entry state:** SaaSify dashboard loaded with the Viewer role selected in the header user toggle.
   * **Path:**
     1. Ken views the "Total Projected Monthly Spend" card in the dashboard metrics.
     2. Ken checks the "Active Subscriptions" count card.
     3. Ken scrolls down to inspect the list of subscriptions in the main view table.
     4. Ken notices the "Renewal Imminent" badge next to subscriptions due in less than or equal to 7 days.
   * **Climax:** Ken receives a clear, accurate, and up-to-date breakdown of the team's spend without seeing any edit or creation controls.
-  * **Resolution:** Ken logs off or closes the browser knowing the spend status.
+  * **Resolution:** Ken closes the browser or tab knowing the spend status.
 
 * **UJ-2. Admin adds and modifies subscriptions**
-  * **Persona + context:** Winston, an Admin user, wants to add a new team subscription (e.g. GitHub Enterprise) and pause a trial that is no longer needed.
-  * **Entry state:** Authenticated as an Admin on the SaaSify dashboard page.
+  * **Persona + context:** Winston, an Admin user, wants to add a new team subscription (e.g., GitHub Enterprise) and pause a trial that is no longer needed.
+  * **Entry state:** SaaSify dashboard loaded with the Admin role selected in the header user toggle.
   * **Path:**
     1. Winston clicks the "Add Subscription" button at the top of the subscription list.
     2. Winston fills out the modal form with Name, Cost, Billing Cycle (Monthly), Status (Active), and Next Renewal Date.
     3. Winston submits the form; the dashboard metrics immediately update.
     4. Winston spots a trial subscription in the table, clicks "Edit", and changes its Status to "Paused".
   * **Climax:** Winston sees the total spend recalculate to exclude the paused subscription.
-  * **Resolution:** Winston logs off with all changes safely persisted.
+  * **Resolution:** Winston closes the browser or tab with all changes safely persisted in localStorage.
 
 ---
 
 ## 3. Glossary
-* **User** — A registered operator of SaaSify. Can be either an Admin or a Viewer.
+* **User** — An operator of SaaSify (mocked client-side in the MVP), characterized by the following fields:
+  - `id`: String (UUID)
+  - `name`: String
+  - `role`: Enum (`ADMIN`, `VIEWER`)
 * **Admin** — A User role with full permissions to view the dashboard and execute mutations (Create, Update, Delete) on Subscriptions.
 * **Viewer** — A User role with read-only permissions to view the dashboard and Subscription list.
-* **Subscription** — A software subscription tracked in SaaSify, characterized by a Name, Cost, Billing Cycle, Status, and Next Renewal Date.
+* **Subscription** — A software subscription tracked in SaaSify, characterized by the following fields:
+  - `id`: String (UUID)
+  - `name`: String (e.g., "GitHub Enterprise")
+  - `cost`: Decimal (Must support >= 0, formatted with two decimal places)
+  - `billingCycle`: Enum (`MONTHLY`, `ANNUAL`)
+  - `status`: Enum (`ACTIVE`, `PAUSED`)
+  - `nextRenewalDate`: Date (YYYY-MM-DD)
 * **Projected Monthly Spend** — The calculated monthly cost of all active Subscriptions, adjusted by their billing cycle.
-* **Active** — A Subscription status indicating it is currently running and paid for.
-* **Paused** — A Subscription status indicating it is temporarily suspended and should not incur cost.
-* **Billing Cycle** — The frequency of subscription payments, either Monthly or Annual.
+* **Active** — A Subscription status indicating it is currently running and paid for (value `ACTIVE`).
+* **Paused** — A Subscription status indicating it is temporarily suspended and should not incur cost (value `PAUSED`).
+* **Billing Cycle** — The frequency of subscription payments, either Monthly (value `MONTHLY`) or Annual (value `ANNUAL`).
 * **Next Renewal Date** — The date when the subscription next renews (YYYY-MM-DD).
 * **Renewal Imminent** — A visual status badge displayed for active Subscriptions whose renewal date is within 7 days.
 
@@ -74,6 +83,8 @@ SaaSify is a lightweight, single-page dashboard application that gives teams and
 The system must display a profile selector in the Header Area to toggle between the Admin and Viewer roles.
 * **Consequences:**
   - Toggling roles dynamically updates the UI layout without a full page reload.
+  - The default role on initial load is Viewer.
+  - The selected role must persist in localStorage so that it is maintained across page reloads.
 
 #### FR-2: Viewer Interface Restrictions
 The system must hide or disable all controls for creating, editing, and deleting Subscriptions when the active role is Viewer.
@@ -96,9 +107,13 @@ The system must display all creation, editing, and deletion controls when the ac
 #### FR-4: Create Subscription
 An Admin can add a new Subscription by providing a Name, Cost, Billing Cycle, Status, and Next Renewal Date.
 * **Consequences:**
+  - The system generates a unique UUID string for `Subscription.id`.
   - Names must not be blank.
-  - Cost must be a positive decimal number with up to two decimal places [ASSUMPTION: US Dollar ($) is the default currency used for all spend calculations and UI formatting.]
+  - Cost must be a non-negative decimal number (cost >= 0) with up to two decimal places [ASSUMPTION: US Dollar ($) is the default currency used for all spend calculations and UI formatting.] This allows tracking of free trials or free-tier subscriptions.
+  - Billing Cycle must be strictly validated against the Enum (`MONTHLY`, `ANNUAL`).
+  - Status must be strictly validated against the Enum (`ACTIVE`, `PAUSED`).
   - Next Renewal Date must be a valid date in YYYY-MM-DD format.
+  - Form validation errors must be presented to the user as clear inline error messages (or native HTML5 form validation errors) directly on the input fields in the modal form.
 
 #### FR-5: Update Subscription
 An Admin can edit any field of an existing Subscription.
@@ -137,10 +152,11 @@ The system must calculate and display a metric card showing the total count of A
 
 **Functional Requirements:**
 #### FR-9: Renewal Imminent Alert Badge
-The system must display a highly visible visual alert badge reading "Renewal Imminent" next to any Active Subscription whose Next Renewal Date is less than or equal to 7 days from the system date.
+The system must display a highly visible visual alert badge reading "Renewal Imminent" next to any Active Subscription whose Next Renewal Date is within 0 to 7 days in the future relative to the system date (i.e. `0 <= nextRenewalDate - systemDate <= 7 days`).
 * **Consequences:**
   - The client system date is used as the current date reference [ASSUMPTION: The client system time is the source of truth for the current date to determine renewal alert badges.]
-  - Paused Subscriptions do not display the badge even if their renewal date is within 7 days.
+  - Subscriptions with renewal dates in the past (overdue) or more than 7 days in the future must not display the badge.
+  - Paused Subscriptions do not display the badge even if their renewal date falls within the 7-day alert window.
 
 ---
 
@@ -156,6 +172,7 @@ The system must display a highly visible visual alert badge reading "Renewal Imm
 ### 6.1 In Scope
 * A single-page dashboard UI built with HTML, Javascript, and Vanilla CSS.
 * LocalStorage state persistence for subscription entries.
+* Pre-seeded mock subscription data on initial load (3-4 subscriptions: e.g., Netflix - Active/Monthly, GitHub Enterprise - Active/Annual with renewal within 7 days, Adobe CC - Paused) to prevent an empty state. Seeding must only trigger if the localStorage key is completely absent, ensuring that users who intentionally delete all subscriptions are left with an empty list rather than having mock data re-seeded.
 * Mock user selector in the header to swap between Admin and Viewer roles.
 * Dashboard metrics: Total Projected Monthly Spend and Active Subscriptions count.
 * List table displaying all subscriptions and inline Admin controls.
@@ -174,7 +191,7 @@ The system must display a highly visible visual alert badge reading "Renewal Imm
 
 ### Primary
 * **SM-1**: 100% accuracy in Projected Monthly Spend calculation as verified by unit tests matching annual-to-monthly conversions. Validates FR-7.
-* **SM-2**: 100% enforcement of role-based visibility, ensuring Viewers have no access to mutation buttons or endpoints. Validates FR-2, FR-3.
+* **SM-2**: 100% enforcement of role-based visibility, ensuring Viewers have no access to mutation buttons or client-side mutation functions. Validates FR-2, FR-3.
 
 ### Counter-metrics (do not optimize)
 * **SM-C1**: Page Load Speed. While we want a fast app, we should not sacrifice UI readability and high-quality styling to save fractional milliseconds on load.
@@ -182,8 +199,7 @@ The system must display a highly visible visual alert badge reading "Renewal Imm
 ---
 
 ## 8. Open Questions
-1. **Initial Seed Data:** Should the application start with a pre-seeded set of mock subscriptions so the dashboard doesn't look empty on the first load? (Recommended: Yes, we should seed 3-4 subscriptions, including one that triggers the "Renewal Imminent" alert).
-2. **Alert Trigger Customization:** Should the 7-day threshold for "Renewal Imminent" alerts be configurable in the UI, or is a hardcoded 7-day rule sufficient for MVP? (Recommended: Hardcode 7 days to keep MVP scope minimal).
+No open questions remain. All previously raised questions have been resolved.
 
 ---
 
@@ -195,10 +211,10 @@ The system must display a highly visible visual alert badge reading "Renewal Imm
 
 ---
 
-## Adapt-In Menu
+## 10. Aesthetic & Layout Guidelines
 
 ### Aesthetic and Tone
-* **Design System:** Use modern typography (e.g. Outfit or Inter via Google Fonts), soft drop shadows, rounded corners, clean borders, and smooth transitions (hover effects).
+* **Design System:** Use modern typography (e.g., Outfit or Inter via Google Fonts), soft drop shadows, rounded corners, clean borders, and smooth transitions (hover effects).
 * **Color Palette:** Curated dark mode or elegant deep blue/indigo theme. Green for active badges, orange/yellow for Paused, and red/crimson for "Renewal Imminent".
 * **Layout:** Single-page grid layout. Top header with title and user toggle. Metrics row below the header. Main table/grid taking up the remaining space.
 
