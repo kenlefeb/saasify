@@ -2,6 +2,7 @@
 
 /* Design Tokens & Custom Properties */
 :root {
+  color-scheme: dark;
   --bg-base: #0f172a;
   --bg-card: #1e293b;
   --bg-input: #0f172a;
@@ -10,10 +11,10 @@
   --accent: #6366f1;
   --accent-hover: #4f46e5;
   --border: #334155;
-  --status-active: #10b981;
-  --status-active-bg: rgba(16, 185, 129, 0.1);
-  --status-paused: #f59e0b;
-  --status-paused-bg: rgba(245, 158, 11, 0.1);
+  --status-active: #34d399; /* Increased contrast (WCAG AA compliant) */
+  --status-active-bg: rgba(52, 211, 153, 0.1);
+  --status-paused: #fbbf24; /* Increased contrast (WCAG AA compliant) */
+  --status-paused-bg: rgba(251, 191, 36, 0.1);
   --status-alert: #f87171; /* Increased contrast for readability on dark cards (~4.8:1) */
   --status-alert-bg: rgba(248, 113, 113, 0.15);
 
@@ -228,7 +229,8 @@ h2 {
 }
 
 .table-container:focus-visible {
-  box-shadow: 0 0 0 2px var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .btn-primary:focus-visible,
@@ -239,7 +241,8 @@ h2 {
 
 .subscriptions-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: left;
 }
 
@@ -263,12 +266,30 @@ h2 {
   overflow-wrap: break-word;
 }
 
+/* Row-level styling for border-radius (requires border-collapse: separate) */
+.subscriptions-table tbody tr td:first-child {
+  border-top-left-radius: var(--radius-md);
+  border-bottom-left-radius: var(--radius-md);
+}
+
+.subscriptions-table tbody tr td:last-child {
+  border-top-right-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+}
+
 .subscriptions-table tbody tr {
   transition: background-color var(--transition-fast);
 }
 
 .subscriptions-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: rgba(255, 255, 255, 0.04); /* Increased opacity for visibility */
+}
+
+/* Flex container for status alignment and spacing */
+.status-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
 }
 
 /* Badges styling */
@@ -295,7 +316,6 @@ h2 {
 .badge-alert {
   background-color: var(--status-alert-bg);
   color: var(--status-alert);
-  margin-left: var(--spacing-2);
 }
 
 /* Empty Placeholder Text styling */
@@ -308,6 +328,13 @@ h2 {
 
 .empty-placeholder.hidden {
   display: none;
+}
+
+/* Role-based Visibility Controls */
+:root:not([data-role="ADMIN"]) .admin-only,
+body:not([data-role="ADMIN"]) .admin-only,
+.app-container:not([data-role="ADMIN"]) .admin-only {
+  display: none !important;
 }
 
 /* Utility Hidden state */

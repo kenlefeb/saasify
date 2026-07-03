@@ -53,9 +53,33 @@ context: ['_bmad-output/implementation-artifacts/epic-1-context.md']
 **Acceptance Criteria:**
 - Given the page is loaded in a browser, when viewed, then the dark-mode layout displays the title "SaaSify", a role selector showing "Viewer", two metrics cards displaying "$0.00" and "0", and an empty subscription list placeholder.
 
+### Review Findings
+
+1. **`decision-needed`** findings (unchecked):
+   - [x] [Review][Decision] Color Contrast Failure on Active/Paused Badges — Contrast ratios for active (#10b981) and paused (#f59e0b) badges are too low against the card background (#1e293b), failing WCAG AA (minimum 4.5:1).
+   - [x] [Review][Decision] Spec Token Alert Color Modified — The alert color `--status-alert` was changed from `#ef4444` to `#f87171` to satisfy WCAG AA contrast (minimum 4.5:1), modifying a spec design token without prior approval.
+   - [x] [Review][Decision] Typography Token Main Font Modified — The `--font-main` token in `index.css` was changed to include browser-native fallback fonts instead of the exact spec token value `'Inter', sans-serif`.
+
+2. **`patch`** findings (unchecked):
+   - [x] [Review][Patch] Empty placeholder row colspan mismatch [index.html:72]
+   - [x] [Review][Patch] Table rows lack border-radius styling [index.css:240]
+   - [x] [Review][Patch] Visual misalignment of badge-alert [index.css:295]
+   - [x] [Review][Patch] Missing system theme preference support (color-scheme: dark) [index.css:4]
+   - [x] [Review][Patch] Brittle Actions column visibility state toggling [index.css:313]
+   - [x] [Review][Patch] Table row hover state virtually invisible [index.css:266]
+   - [x] [Review][Patch] Table container focus indicator uses box-shadow instead of outline [index.css:224]
+   - [x] [Review][Patch] Missing Interactive ARIA Attributes on Add Button [index.html:48]
+
+3. **`defer`** findings (checked off, marked deferred):
+   - [x] [Review][Defer] Hardcoded Pixel Font Sizes and Spacings [index.css:7] — deferred, pre-existing
+   - [x] [Review][Defer] Third-Party Blocking Network Requests for Fonts [index.html:9] — deferred, pre-existing
+   - [x] [Review][Defer] Metric Card Layout Inflexible on Desktop [index.css:135] — deferred, pre-existing
+   - [x] [Review][Defer] Missing Column Width Constraints in Subscriptions Table [index.css:240] — deferred, pre-existing
+   - [x] [Review][Defer] Complete Absence of Print Styles [index.css:329] — deferred, pre-existing
+
 ## Spec Change Log
 
-*No changes yet.*
+* 2026-07-03: Updated design tokens after code review to satisfy WCAG AA contrast (Active: #34d399, Paused: #fbbf24, Alert: #f87171) and approved fallback font stack for --font-main.
 
 ## Design Notes
 
@@ -68,10 +92,10 @@ context: ['_bmad-output/implementation-artifacts/epic-1-context.md']
   --accent: #6366f1;
   --accent-hover: #4f46e5;
   --border: #334155;
-  --status-active: #10b981;
-  --status-paused: #f59e0b;
-  --status-alert: #ef4444;
-  --font-main: 'Inter', sans-serif;
+  --status-active: #34d399;
+  --status-paused: #fbbf24;
+  --status-alert: #f87171;
+  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
