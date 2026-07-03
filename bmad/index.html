@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaaSify Subscription Tracker</title>
+  <meta name="description" content="SaaSify - A lightweight subscription tracking dashboard to monitor monthly spend and avoid surprise renewals.">
+  <!-- Preconnect and load Inter font from Google Fonts CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Local Stylesheet -->
+  <link rel="stylesheet" href="index.css">
+  <!-- Client-side Application Script -->
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header Area -->
+    <header class="app-header">
+      <h1 class="brand-title">SaaSify</h1>
+      <div class="role-selector-container">
+        <label for="roleSelect" class="role-label">Active Role:</label>
+        <select id="roleSelect" class="role-select">
+          <option value="VIEWER" selected>Viewer</option>
+          <option value="ADMIN">Admin</option>
+        </select>
+      </div>
+    </header>
+
+    <!-- Metrics Row -->
+    <section class="metrics-grid" aria-label="Spend Metrics">
+      <div class="metric-card">
+        <span class="metric-label">Total Projected Monthly Spend</span>
+        <span id="monthlySpend" class="metric-value">$0.00</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">Active Subscriptions</span>
+        <span id="activeCount" class="metric-value">0</span>
+      </div>
+    </section>
+
+    <!-- Subscriptions Card -->
+    <main class="main-card">
+      <div class="card-header">
+        <h2>Subscriptions</h2>
+        <!-- Add Subscription Button is hidden for Viewers by default -->
+        <button id="addSubscriptionBtn" class="btn-primary hidden">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add Subscription
+        </button>
+      </div>
+
+      <!-- Table Skeleton -->
+      <div class="table-container" tabindex="0" role="region" aria-label="Subscriptions Table">
+        <table class="subscriptions-table">
+          <thead>
+            <tr>
+              <th>Subscription Name</th>
+              <th>Cost</th>
+              <th>Billing Cycle</th>
+              <th>Status</th>
+              <th>Next Renewal</th>
+              <!-- Actions column is hidden for Viewers by default -->
+              <th id="actionsHeader" class="hidden">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="subscriptionsBody">
+            <!-- Renders empty list placeholder initially -->
+            <tr id="emptyRow">
+              <td colspan="6" class="empty-placeholder">
+                No subscriptions tracked.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
