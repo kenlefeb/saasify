@@ -14,6 +14,11 @@ function AppContent() {
     setModalOpen(true);
   };
 
+  const handleCloseModal = () => {
+    setActiveSubscription(null);
+    setModalOpen(false);
+  };
+
   return (
     <>
       <Header />
@@ -24,7 +29,7 @@ function AppContent() {
       {modalOpen && (
         <SubscriptionModal 
           activeSubscription={activeSubscription} 
-          onClose={() => setModalOpen(false)} 
+          onClose={handleCloseModal} 
         />
       )}
     </>

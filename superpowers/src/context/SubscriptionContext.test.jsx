@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { render, screen, act } from '@testing-library/react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SubscriptionProvider, SubscriptionContext } from './SubscriptionContext';
 
 const TestComponent = () => {
@@ -76,5 +76,21 @@ describe('SubscriptionContext', () => {
       screen.getByTestId('add-btn').click();
     });
     expect(screen.getByTestId('spend')).toHaveTextContent('45.00');
+  });
+
+  it('falls back to DEFAULT_SUBSCRIPTIONS if localStorage contains invalid JSON', () => {
+    window.localStorage.setItem('saasify_subscriptions', 'invalid-json{');
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    render(
+      <SubscriptionProvider>
+        <TestComponent />
+      </SubscriptionProvider>
+    );
+
+    // Should fall back to DEFAULT_SUBSCRIPTIONS, spend is 35.00
+    expect(screen.getByTestId('spend')).toHaveTextContent('35.00');
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    consoleErrorSpy.mockRestore();
   });
 });

@@ -11,7 +11,15 @@ const DEFAULT_SUBSCRIPTIONS = [
 export const SubscriptionProvider = ({ children }) => {
   const [subscriptions, setSubscriptions] = useState(() => {
     const saved = localStorage.getItem('saasify_subscriptions');
-    return saved ? JSON.parse(saved) : DEFAULT_SUBSCRIPTIONS;
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (error) {
+        console.error('Error parsing subscriptions from localStorage:', error);
+        return DEFAULT_SUBSCRIPTIONS;
+      }
+    }
+    return DEFAULT_SUBSCRIPTIONS;
   });
 
   const [currentUser, setCurrentUser] = useState('ADMIN');
