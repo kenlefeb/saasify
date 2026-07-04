@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { SubscriptionContext } from '../context/SubscriptionContext';
 
 export default function SubscriptionModal({ activeSubscription, onClose }) {
-  const { addSubscription, updateSubscription } = useContext(SubscriptionContext);
+  const { addSubscription, updateSubscription, currentUser } = useContext(SubscriptionContext);
 
   const [name, setName] = useState('');
   const [cost, setCost] = useState(0);
@@ -28,11 +28,12 @@ export default function SubscriptionModal({ activeSubscription, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!name || cost < 0 || !nextRenewalDate) return;
+    const parsedCost = parseFloat(cost);
+    if (!name || isNaN(parsedCost) || parsedCost < 0 || !nextRenewalDate) return;
 
     const data = {
       name,
-      cost: parseFloat(parseFloat(cost).toFixed(2)),
+      cost: parseFloat(parsedCost.toFixed(2)),
       billingCycle,
       status,
       nextRenewalDate
@@ -45,6 +46,8 @@ export default function SubscriptionModal({ activeSubscription, onClose }) {
     }
     onClose();
   };
+
+  if (currentUser !== 'ADMIN') return null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>

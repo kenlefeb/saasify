@@ -123,4 +123,33 @@ describe('SubscriptionModal Component', () => {
     fireEvent.click(content);
     expect(mockOnClose).toHaveBeenCalledTimes(2);
   });
+
+  it('does not render the modal if currentUser is not ADMIN', () => {
+    const viewerContext = { ...mockContext, currentUser: 'VIEWER' };
+    const { container } = render(
+      <SubscriptionContext.Provider value={viewerContext}>
+        <SubscriptionModal activeSubscription={null} onClose={vi.fn()} />
+      </SubscriptionContext.Provider>
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('does not trigger addSubscription if cost is empty or invalid', () => {
+    const mockAddSubscription = vi.fn();
+    const contextWithAdd = { ...mockContext, addSubscription: mockAddSubscription };
+    
+    render(
+      <SubscriptionContext.Provider value={contextWithAdd}>
+        <SubscriptionModal activeSubscription={null} onClose={vi.fn()} />
+      </SubscriptionContext.Provider>
+    );
+
+    fireEvent.change(screen.getByLabelText(/name/i), { target: { value: 'Disney+' } });
+    fireEvent.change(screen.getByLabelText(/cost/i), { target: { value: '' } }); // empty value
+    fireEvent.change(screen.getByLabelText(/next renewal/i), { target: { value: '2026-07-20' } });
+    
+    fireEvent.click(screen.getByRole('button', { name: /save/i }));
+
+    expect(mockAddSubscription).not.toHaveBeenCalled();
+  });
 });
